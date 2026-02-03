@@ -2,45 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Qualys KB Dashboard</title>
+    <title>Qualys KB Full Data Explorer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --text: #f8fafc; --red: #ef4444;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .stats-card { background: var(--card); padding: 30px; border-radius: 15px; text-align: center; border: 1px solid #334155; margin-bottom: 30px; }
-        .number { font-size: 3rem; font-weight: bold; color: var(--blue); display: block; }
-        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
-        th { background: #111827; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; }
-        .sev-5 { color: var(--red); font-weight: bold; }
-        .search-container { margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; }
+        :root { --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; } /* Wider container for more columns */
+        .stats-card { background: var(--card); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #334155; margin-bottom: 20px; }
+        .number { font-size: 2.5rem; font-weight: bold; color: var(--blue); }
+        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; font-size: 0.85rem; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #334155; word-break: break-word; }
+        th { background: #111827; color: var(--blue); text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><i class="fas fa-shield-halved"></i> Qualys KnowledgeBase Live</h1>
+    <h1><i class="fas fa-list-check"></i> Qualys KB Full Metrics</h1>
     
     <div class="stats-card">
         <span id="recent-count" class="number">0</span>
-        <span id="sub-text">Initializing Dashboard...</span>
+        <div id="sub-text">Loading Extended KnowledgeBase...</div>
     </div>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Filter by Title or QID..." onkeyup="filterTable()">
-    </div>
+    <input type="text" id="searchInput" placeholder="Search across all columns..." onkeyup="filterTable()">
 
     <table id="kbTable">
         <thead>
             <tr>
                 <th>QID</th>
                 <th>Title</th>
-                <th>Severity</th>
+                <th>CVE ID</th>
+                <th>Category</th>
+                <th>Sub-Category</th>
+                <th>Vendor Ref</th>
+                <th>Bugtraq</th>
                 <th>Published</th>
+                <th>Modified</th>
             </tr>
         </thead>
         <tbody id="vuln-table">
@@ -51,29 +50,28 @@
 <script>
     async function updateUI() {
         try {
-            // This fetches the data.json created by your Python Action
             const res = await fetch('data.json');
-            if (!res.ok) throw new Error("Data file not found");
-            
             const kb = await res.json();
 
-            // Update Header Stats
-            document.getElementById('recent-count').innerText = kb.count || 0;
-            document.getElementById('sub-text').innerText = `Vulnerabilities Sync: ${kb.last_updated}`;
+            document.getElementById('recent-count').innerText = kb.count;
+            document.getElementById('sub-text').innerText = `Last Updated: ${kb.last_updated}`;
 
-            // Populate Table
             const table = document.getElementById('vuln-table');
-            table.innerHTML = kb.data.map(item => `
+            table.innerHTML = kb.data.map(v => `
                 <tr>
-                    <td>${item.qid}</td>
-                    <td>${item.title}</td>
-                    <td class="${item.severity == '5' ? 'sev-5' : ''}">${item.severity}</td>
-                    <td>${item.published}</td>
+                    <td>${v.qid}</td>
+                    <td>${v.title}</td>
+                    <td>${v.cve_id}</td>
+                    <td>${v.category}</td>
+                    <td>${v.sub_category}</td>
+                    <td>${v.vendor_ref}</td>
+                    <td>${v.bugtraq}</td>
+                    <td>${v.published}</td>
+                    <td>${v.modified}</td>
                 </tr>
             `).join('');
         } catch (err) {
-            document.getElementById('sub-text').innerText = "Dashboard Error: data.json not found yet.";
-            console.error(err);
+            document.getElementById('sub-text').innerText = "Error: data.json not populated.";
         }
     }
 
@@ -86,7 +84,6 @@
         }
     }
 
-    // Call the function
     updateUI();
 </script>
 
