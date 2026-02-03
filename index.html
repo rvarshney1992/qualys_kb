@@ -1,19 +1,80 @@
-async function updateUI() {
-    const res = await fetch('data.json');
-    const kb = await res.json();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualys KB Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a; --card-bg: #1e293b; --text-primary: #f8fafc;
+            --accent-blue: #38bdf8; --accent-red: #ef4444; --accent-green: #22c55e;
+        }
+        body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-primary); padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
+        .count { font-size: 2.5rem; font-weight: bold; color: var(--accent-blue); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card-bg); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #0f172a; color: var(--accent-blue); }
+        .sev-5 { color: var(--accent-red); font-weight: bold; }
+    </style>
+</head>
+<body>
 
-    // Update the Metric Card
-    document.getElementById('recent-count').innerText = kb.count;
-    document.getElementById('sub-text').innerText = `New findings ${kb.time_window}`;
+<div class="container">
+    <h1><i class="fas fa-shield-halved"></i> Qualys KB Live Feed</h1>
+    
+    <div class="card">
+        <div id="recent-count" class="count">...</div>
+        <div id="sub-text">Fetching latest data...</div>
+    </div>
 
-    // Update the Table
-    const table = document.getElementById('vuln-table');
-    table.innerHTML = kb.data.map(item => `
-        <tr>
-            <td>${item.qid}</td>
-            <td>${item.title}</td>
-            <td class="sev-${item.severity}">${item.severity}</td>
-            <td>${item.published}</td>
-        </tr>
-    `).join('');
-}
+    <table>
+        <thead>
+            <tr>
+                <th>QID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Published</th>
+            </tr>
+        </thead>
+        <tbody id="vuln-table">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    async function updateUI() {
+        try {
+            const res = await fetch('data.json');
+            if (!res.ok) throw new Error("Could not find data.json");
+            
+            const kb = await res.json();
+
+            // Update the Metric Card
+            document.getElementById('recent-count').innerText = kb.count;
+            document.getElementById('sub-text').innerText = `New findings ${kb.time_window}`;
+
+            // Update the Table
+            const table = document.getElementById('vuln-table');
+            table.innerHTML = kb.data.map(item => `
+                <tr>
+                    <td>${item.qid}</td>
+                    <td>${item.title}</td>
+                    <td class="${item.severity == '5' ? 'sev-5' : ''}">${item.severity}</td>
+                    <td>${item.published}</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            document.getElementById('sub-text').innerText = "Error loading data. Check if data.json exists.";
+            console.error(err);
+        }
+    }
+
+    // Run the function immediately
+    updateUI();
+</script>
+
+</body>
+</html>
