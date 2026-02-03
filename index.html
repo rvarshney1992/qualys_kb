@@ -2,45 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Qualys Live API Portal</title>
+    <title>Qualys Live KB Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --text: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .search-panel { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;}
-        .field { display: flex; flex-direction: column; flex: 1; min-width: 150px; }
-        label { font-size: 0.7rem; color: var(--blue); margin-bottom: 5px; text-transform: uppercase; }
-        input, select { padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; }
-        .btn-search { padding: 10px 25px; background: var(--blue); color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; height: 42px; }
-        #loader { display: none; margin: 20px 0; text-align: center; color: var(--blue); }
-        .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 10px; }
+        .container { max-width: 100%; margin: 0 auto; }
+        .search-panel { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+        .field { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
+        label { font-size: 0.7rem; color: var(--blue); margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
+        input, select { padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; width: 100%; box-sizing: border-box; }
+        .btn-search { padding: 0 30px; background: var(--blue); color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; height: 42px; transition: 0.3s; }
+        .btn-search:hover { background: #7dd3fc; transform: translateY(-2px); }
+        #loader { display: none; margin: 20px 0; text-align: center; color: var(--blue); font-weight: bold; }
+        .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 10px; border: 1px solid #334155; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; white-space: nowrap; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; white-space: nowrap; }
+        th { background: #111827; color: var(--blue); position: sticky; top: 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><i class="fas fa-bolt"></i> Qualys Live Search</h1>
+    <h1><i class="fas fa-bolt"></i> Qualys KnowledgeBase Live</h1>
     
     <div class="search-panel">
         <div class="field">
-            <label>GitHub PAT Token</label>
-            <input type="password" id="pat" placeholder="Enter PAT to enable automation">
+            <label>GitHub PAT (Auto-Saved)</label>
+            <input type="password" id="pat" placeholder="Paste PAT once...">
         </div>
         <div class="field">
             <label>Specific QIDs</label>
-            <input type="text" id="ids" placeholder="e.g. 12345">
+            <input type="text" id="ids" placeholder="e.g. 12345, 67890">
         </div>
         <div class="field">
             <label>Published After</label>
             <input type="date" id="date">
         </div>
-        <button class="btn-search" onclick="runLiveSearch()">Execute Search</button>
+        <div class="field">
+            <label>Method</label>
+            <select id="method">
+                <option value="">Any</option>
+                <option value="RemoteOnly">Remote Only</option>
+                <option value="AuthenticatedOnly">Authenticated Only</option>
+            </select>
+        </div>
+        <button class="btn-search" onclick="runSearch()"><i class="fas fa-search"></i> Search</button>
     </div>
 
-    <div id="loader"><i class="fas fa-spinner fa-spin"></i> GitHub Action Running... Fetching Live Qualys Data...</div>
+    <div id="loader"><i class="fas fa-spinner fa-spin"></i> Triggering GitHub Action... Checking for fresh data...</div>
 
     <div class="table-wrapper">
         <table id="kbTable">
@@ -51,57 +61,68 @@
 </div>
 
 <script>
-    const OWNER = "rvarshney1992";
-    const REPO = "qualys_kb";
+    const OWNER = "rvarshney1992"; // Verified from your screenshot
+    const REPO = "qualys_kb";      // Verified from your screenshot
 
-    async function runLiveSearch() {
+    // Load saved token on startup
+    window.onload = () => {
+        const savedToken = localStorage.getItem('gh_token');
+        if (savedToken) document.getElementById('pat').value = savedToken;
+        loadInitialData();
+    };
+
+    async function runSearch() {
         const pat = document.getElementById('pat').value;
-        const ids = document.getElementById('ids').value;
-        const date = document.getElementById('date').value;
-
-        if (!pat) return alert("Please enter your GitHub PAT token.");
-
+        if (!pat) return alert("Please enter a GitHub PAT (Personal Access Token).");
+        
+        localStorage.setItem('gh_token', pat); // Save for next time
         document.getElementById('loader').style.display = "block";
-        document.getElementById('tBody').innerHTML = ""; // Clear old data
+        document.getElementById('tBody').innerHTML = ""; // Clear screen
 
-        // Trigger GitHub Action via API
+        const inputs = {
+            ids: document.getElementById('ids').value,
+            date: document.getElementById('date').value,
+            method: document.getElementById('method').value
+        };
+
         const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/update_kb.yml/dispatches`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${pat}`,
                 'Accept': 'application/vnd.github+json',
             },
-            body: JSON.stringify({
-                ref: 'main',
-                inputs: { ids: ids, date: date }
-            })
+            body: JSON.stringify({ ref: 'main', inputs: inputs })
         });
 
-        if (res.ok) {
-            pollForUpdate();
-        } else {
-            alert("Error triggering Action. Check PAT or Repo names.");
-            document.getElementById('loader').style.display = "none";
-        }
+        if (res.ok) pollForResults();
+        else alert("Error: Check if your PAT has 'workflow' permissions.");
     }
 
-    async function pollForUpdate() {
-        // Poll every 10 seconds to see if data.json timestamp changed
-        const interval = setInterval(async () => {
-            const res = await fetch(`data.json?nocache=${Date.now()}`);
-            const data = await res.json();
+    async function pollForResults() {
+        const check = setInterval(async () => {
+            const res = await fetch(`data.json?t=${Date.now()}`);
+            const json = await res.json();
+            const lastUpdate = new Date(json.last_updated).getTime();
             
-            // If the data is fresh (within last 2 mins), stop polling and show
-            const lastUpdate = new Date(data.last_updated).getTime();
+            // If the file was updated in the last 2 minutes
             if (Date.now() - lastUpdate < 120000) {
-                clearInterval(interval);
-                displayData(data);
+                clearInterval(check);
+                render(json);
                 document.getElementById('loader').style.display = "none";
             }
         }, 10000);
     }
 
-    function displayData(json) {
+    async function loadInitialData() {
+        try {
+            const res = await fetch('data.json');
+            const json = await res.json();
+            render(json);
+        } catch (e) { console.log("No data found yet."); }
+    }
+
+    function render(json) {
+        if (!json.data || json.data.length === 0) return;
         const cols = Object.keys(json.data[0]);
         document.getElementById('tHead').innerHTML = `<tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
         document.getElementById('tBody').innerHTML = json.data.map(row => `
