@@ -6,51 +6,95 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --text: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
         .container { max-width: 100%; margin: 0 auto; }
-        .search-panel { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+        
+        .search-panel { 
+            background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; 
+            display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;
+            position: sticky; top: 0; z-index: 100;
+        }
         .field { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
         label { font-size: 0.7rem; color: var(--blue); margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
         input, select { padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; width: 100%; box-sizing: border-box; }
+        
         .btn-search { padding: 0 30px; background: var(--blue); color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; height: 42px; transition: 0.3s; }
         .btn-search:hover { background: #7dd3fc; transform: translateY(-2px); }
+        
         #loader { display: none; margin: 20px 0; text-align: center; color: var(--blue); font-weight: bold; }
-        .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 10px; border: 1px solid #334155; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; white-space: nowrap; }
-        th { background: #111827; color: var(--blue); position: sticky; top: 0; }
+
+        /* WORD WRAP & STICKY LOGIC */
+        .table-wrapper { 
+            overflow-x: auto; 
+            background: var(--card); 
+            border-radius: 10px; 
+            border: 1px solid #334155;
+            max-height: 80vh;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: separate; /* Required for sticky borders */
+            border-spacing: 0;
+            font-size: 0.75rem; 
+            table-layout: fixed; /* Forces columns to respect width */
+        }
+        th, td { 
+            padding: 12px; 
+            text-align: left; 
+            border-bottom: 1px solid #334155; 
+            border-right: 1px solid #334155;
+            white-space: normal; /* Enables wrapping */
+            word-break: break-word; /* Prevents overflow */
+            vertical-align: top;
+        }
+        
+        /* Sticky Header */
+        th { 
+            background: #111827; 
+            color: var(--blue); 
+            position: sticky; 
+            top: 0; 
+            z-index: 20; 
+        }
+
+        /* Sticky First Column (QID) */
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            background: #1e293b;
+            z-index: 10;
+            width: 80px;
+            border-right: 2px solid var(--blue);
+        }
+        th:first-child { z-index: 30; background: #111827; }
+
+        /* Column Width Definitions */
+        th:nth-child(2) { width: 250px; } /* Title */
+        th:nth-child(3) { width: 120px; } /* Published */
+        /* Large Text Blocks */
+        .wide-col { width: 400px; } 
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><i class="fas fa-bolt"></i> Qualys KnowledgeBase Live</h1>
-    
     <div class="search-panel">
         <div class="field">
-            <label>GitHub PAT (Auto-Saved)</label>
-            <input type="password" id="pat" placeholder="Paste PAT once...">
+            <label>GitHub Token (Saved)</label>
+            <input type="password" id="pat" placeholder="Paste Classic PAT...">
         </div>
         <div class="field">
-            <label>Specific QIDs</label>
-            <input type="text" id="ids" placeholder="e.g. 12345, 67890">
+            <label>QIDs (ids)</label>
+            <input type="text" id="ids" placeholder="e.g. 530757">
         </div>
         <div class="field">
             <label>Published After</label>
             <input type="date" id="date">
         </div>
-        <div class="field">
-            <label>Method</label>
-            <select id="method">
-                <option value="">Any</option>
-                <option value="RemoteOnly">Remote Only</option>
-                <option value="AuthenticatedOnly">Authenticated Only</option>
-            </select>
-        </div>
         <button class="btn-search" onclick="runSearch()"><i class="fas fa-search"></i> Search</button>
     </div>
 
-    <div id="loader"><i class="fas fa-spinner fa-spin"></i> Triggering GitHub Action... Checking for fresh data...</div>
+    <div id="loader"><i class="fas fa-spinner fa-spin"></i> GitHub Action processing 1,000+ records...</div>
 
     <div class="table-wrapper">
         <table id="kbTable">
@@ -61,10 +105,9 @@
 </div>
 
 <script>
-    const OWNER = "rvarshney1992"; // Verified from your screenshot
-    const REPO = "qualys_kb";      // Verified from your screenshot
+    const OWNER = "rvarshney1992";
+    const REPO = "qualys_kb";
 
-    // Load saved token on startup
     window.onload = () => {
         const savedToken = localStorage.getItem('gh_token');
         if (savedToken) document.getElementById('pat').value = savedToken;
@@ -73,40 +116,27 @@
 
     async function runSearch() {
         const pat = document.getElementById('pat').value;
-        if (!pat) return alert("Please enter a GitHub PAT (Personal Access Token).");
-        
-        localStorage.setItem('gh_token', pat); // Save for next time
+        if (!pat) return alert("Enter PAT.");
+        localStorage.setItem('gh_token', pat); 
         document.getElementById('loader').style.display = "block";
-        document.getElementById('tBody').innerHTML = ""; // Clear screen
-
-        const inputs = {
-            ids: document.getElementById('ids').value,
-            date: document.getElementById('date').value,
-            method: document.getElementById('method').value
-        };
+        document.getElementById('tBody').innerHTML = ""; 
 
         const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/update_kb.yml/dispatches`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${pat}`,
-                'Accept': 'application/vnd.github+json',
-            },
-            body: JSON.stringify({ ref: 'main', inputs: inputs })
+            headers: { 'Authorization': `Bearer ${pat}`, 'Accept': 'application/vnd.github+json' },
+            body: JSON.stringify({ ref: 'main', inputs: { ids: document.getElementById('ids').value, date: document.getElementById('date').value }})
         });
 
-        if (res.ok) pollForResults();
-        else alert("Error: Check if your PAT has 'workflow' permissions.");
+        if (res.ok) poll();
+        else alert("Trigger failed. Verify Classic Token scopes.");
     }
 
-    async function pollForResults() {
-        const check = setInterval(async () => {
+    async function poll() {
+        const interval = setInterval(async () => {
             const res = await fetch(`data.json?t=${Date.now()}`);
             const json = await res.json();
-            const lastUpdate = new Date(json.last_updated).getTime();
-            
-            // If the file was updated in the last 2 minutes
-            if (Date.now() - lastUpdate < 120000) {
-                clearInterval(check);
+            if (Date.now() - new Date(json.last_updated).getTime() < 120000) {
+                clearInterval(interval);
                 render(json);
                 document.getElementById('loader').style.display = "none";
             }
@@ -115,16 +145,21 @@
 
     async function loadInitialData() {
         try {
-            const res = await fetch('data.json');
-            const json = await res.json();
-            render(json);
-        } catch (e) { console.log("No data found yet."); }
+            const res = await fetch(`data.json?t=${Date.now()}`);
+            render(await res.json());
+        } catch (e) { console.log("Init failed"); }
     }
 
     function render(json) {
         if (!json.data || json.data.length === 0) return;
         const cols = Object.keys(json.data[0]);
-        document.getElementById('tHead').innerHTML = `<tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
+        
+        // Define which columns should be "wide" for better wrapping
+        const wideFields = ['DIAGNOSIS', 'CONSEQUENCE', 'SOLUTION', 'SOFTWARE_LIST'];
+
+        document.getElementById('tHead').innerHTML = `<tr>${cols.map(c => 
+            `<th class="${wideFields.includes(c) ? 'wide-col' : ''}">${c}</th>`).join('')}</tr>`;
+        
         document.getElementById('tBody').innerHTML = json.data.map(row => `
             <tr>${cols.map(c => `<td>${row[c] || ''}</td>`).join('')}</tr>
         `).join('');
