@@ -1,33 +1,32 @@
 {
-    "last_updated": "2026-02-03 21:13:39",
+    "last_updated": "2026-02-03 21:23:32",
     "data": [
         {
-            "QID": "530757",
+            "QID": "530809",
             "VULN_TYPE": "Potential Vulnerability",
-            "SEVERITY_LEVEL": "5",
-            "TITLE": "Cisco AsyncOS Secure Email Gateway Remote Command Execution (RCE) Vulnerability (CVE-2025-20393)",
+            "SEVERITY_LEVEL": "4",
+            "TITLE": "WordPress Fancy Product Designer Plugin: Cross-Site Scripting (XSS) Vulnerability (CVE-2025-12570)",
             "CATEGORY": "Web Application",
-            "LAST_SERVICE_MODIFICATION_DATETIME": "2026-01-29T05:00:02Z",
-            "PUBLISHED_DATETIME": "2026-01-02T04:01:28Z",
-            "CODE_MODIFIED_DATETIME": "2026-01-02T04:01:28Z",
-            "PATCHABLE": "0",
-            "SOFTWARE_LIST": "asyncos, cisco, secure_email_and_web_manager_m195, cisco, secure_email_and_web_manager_m190, cisco, secure_email_and_web_manager_m390x, cisco, secure_email_and_web_manager_m170, cisco, secure_email_and_web_manager_m680, cisco, secure_email_and_web_manager_m690, cisco, secure_email_and_web_manager_virtual_appliance_m100v, cisco, secure_email_and_web_manager_m395, cisco, secure_email_gateway_virtual_appliance_c600v, cisco, secure_email_gateway_c395, cisco, secure_email_gateway_c195, cisco, secure_email_and_web_manager_m695, cisco, secure_email_and_web_manager_m380, cisco, secure_email_and_web_manager_m690x, cisco, secure_email_and_web_manager_virtual_appliance_m300v, cisco, secure_email_and_web_manager_m390, cisco, secure_email_and_web_manager_virtual_appliance_m600v, cisco, secure_email_gateway_virtual_appliance_c100v, cisco, secure_email_gateway_virtual_appliance_c300v, cisco, secure_email_gateway_c695, cisco",
-            "VENDOR_REFERENCE_LIST": "cisco-sa-sma-attack-N9bf4, https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sma-attack-N9bf4",
-            "CVE_LIST": "CVE-2025-20393, http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-20393",
-            "DIAGNOSIS": "Cisco AsyncOS Secure Email Gateway is an advanced appliance/service protecting email by filtering spam, malware, and phishing using deep packet inspection, reputation filtering (Talos), sandboxing, and outbreak protection.<P>\n\nCisco is aware of a potential vulnerability.&nbsp; Cisco is currently investigating and&nbsp;will update these details as appropriate&nbsp;as more information becomes available.<P>\n\nAffected Products<BR>\nCisco AsyncOS Secure Email Gateway<P>\n\nQID Detection Logic (Unauthenticated):<BR>\nThis QID sends a HTTP GET request and checks the response to confirm if the host is running vulnerable version of Cisco AsyncOS Secure Email Gateway.\n",
-            "CONSEQUENCE": "Successful exploitation of this Cisco Secure Email Gateway/Secure Email attack can allow unauthenticated attackers to execute arbitrary commands with root privileges on affected systems.<P>",
-            "SOLUTION": "Customers are advised to refer to <A HREF=\"https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sma-attack-N9bf4\" TARGET=\"_blank\">cisco-sa-sma-attack-N9bf4</A> for more information.",
-            "CORRELATION": "vulncheck-threat-actors, CVE-2025-20393, UAT-9686, https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sma-attack-N9bf4, CVE-2025-20393, UAT-9686, https://blog.talosintelligence.com/uat-9686/, CVE-2025-20393, Unattributed, https://censys.com/advisory/cve-2025-20393, CVE-2025-20393, UAT-9686, https://arcticwolf.com/resources/blog/cve-2025-20393/, CVE-2025-20393, UAT-9686, https://www.linkedin.com/pulse/cisco-secure-email-gateway-under-siege-cve-2025-20393-cvss-10-bzyfc/, CVE-2025-20393, UAT-9686, https://fortiguard.fortinet.com/threat-signal-report/6307, CVE-2025-20393, Unattributed, https://x.com/Shadowserver/status/2002446754159997002, CVE-2025-20393, Unattributed, https://hs-45734016.f.hubspotemail.net/hubfs/45734016/Global%20Threat%20Report%2c%20End%20of%202025.pdf, CVE-2025-20393, Unattributed, https://www.recordedfuture.com/blog/december-2025-cve-landscape, CVE-2025-20393, Unattributed, https://www.loginsoft.com/reports/annually/vulnerability-intelligence-report-2025, CVE-2025-20393, UAT-9686, https://www.checkpoint.com/security-report/?flz-category=items&flz-item=report-cyber-security-report-2026, CVE-2025-20393, Unattributed, https://www.trellix.com/assets/reports/trellix-healthcare-cybersecurity-threat-intelligence-report.pdf, cisa-kev, CVE-2025-20393, Cisco Multiple Products Improper Input Validation Vulnerability, https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-            "CVSS": "10.0, 9.0, CVSS:2.0/AV:N/AC:L/Au:N/C:C/I:C/A:C/E:POC/RL:U/RC:C, 3, 1, 3, 3, 3, 1, 2, 4, 3",
-            "CVSS_V3": "10.0, 9.4, CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H/E:P/RL:U/RC:C, 3.1, 1, 1, 3, 3, 3, 1, 1, 2, 2, 4, 3",
+            "LAST_SERVICE_MODIFICATION_DATETIME": "2026-01-09T12:13:59Z",
+            "PUBLISHED_DATETIME": "2026-01-09T06:54:21Z",
+            "CODE_MODIFIED_DATETIME": "2026-01-09T06:54:21Z",
+            "PATCHABLE": "1",
+            "SOFTWARE_LIST": "None, wordpress",
+            "VENDOR_REFERENCE_LIST": "WordPress Fancy Product Designer Plugin, https://codecanyon.net/item/fancy-product-designer-woocommercewordpress/6318393",
+            "CVE_LIST": "CVE-2025-12570, http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-12570",
+            "DIAGNOSIS": "The WordPress Fancy Product Designer plugin allows customers to design and customize any kind of product.<P>\n\nThe Fancy Product Designer Plugin is vulnerable to Stored Cross-Site Scripting (XSS) via SVG File uploads due to insufficient input sanitization and output escaping in the 'data-to-image.php' and 'pdf-to-image.php' files.<P>\n\nAffected Versions:<BR>\nWordPress Fancy Product Designer Plugin before, and including, 6.4.8<P>\n\nQID Detection Logic:<BR>\nThis QID sends a HTTP GET request and checks for vulnerable version of WordPress Fancy Product Designer Plugin running on the target application.<P>",
+            "CONSEQUENCE": "Successful exploitation of this vulnerability could allow an unauthenticated attacker to inject arbitrary web scripts in pages that will execute whenever a user accesses the SVG file.<P>",
+            "SOLUTION": "Customers are advised to upgrade to <A HREF=\"https://support.fancyproductdesigner.com/support/discussions/forums/5000283646\" TARGET=\"_blank\">WordPress Fancy Product Designer Plugin 6.5.0</A> or later version to remediate the vulnerability.\n<P>Patch:<BR>\nFollowing are links for downloading patches to fix the vulnerabilities:\n<P> <A HREF=\"https://support.fancyproductdesigner.com/support/discussions/5000055017\" TARGET=\"_blank\">Fancy Product Designer</A>",
+            "CVSS": "6.4, 4.7, CVSS:2.0/AV:N/AC:L/Au:N/C:P/I:P/A:N/E:U/RL:OF/RC:C, 3, 1, 2, 2, 1, 1, 1, 1, 3",
+            "CVSS_V3": "7.2, 6.3, CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N/E:U/RL:O/RC:C, 3.1, 1, 1, 2, 2, 1, 1, 1, 2, 1, 1, 3",
             "PCI_FLAG": "1",
-            "THREAT_INTELLIGENCE": "Exploit_Public, High_Lateral_Movement, Easy_Exploit, High_Data_Loss, Denial_of_Service, No_Patch, Wormable, Privilege_Escalation, Unauthenticated_Exploitation, Remote_Code_Execution, Cisa_Known_Exploited_Vulns",
-            "DISCOVERY": "1, Exploit Available"
+            "THREAT_INTELLIGENCE": "Easy_Exploit, Privilege_Escalation",
+            "DISCOVERY": "1, Patch Available"
         }
     ],
     "params_used": {
         "action": "list",
         "details": "All",
-        "ids": "530757"
+        "ids": "530809"
     }
 }
