@@ -2,90 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Qualys KB Full Data Explorer</title>
+    <title>Qualys KnowledgeBase Search (V2 API)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --text: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; } /* Wider container for more columns */
-        .stats-card { background: var(--card); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #334155; margin-bottom: 20px; }
-        .number { font-size: 2.5rem; font-weight: bold; color: var(--blue); }
-        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; font-size: 0.85rem; }
-        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #334155; word-break: break-word; }
-        th { background: #111827; color: var(--blue); text-transform: uppercase; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .search-panel { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .field { display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; color: var(--blue); margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
+        input, select { padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; }
+        .btn-search { grid-column: 1 / -1; padding: 15px; background: var(--blue); color: #0f172a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-search:hover { background: #7dd3fc; }
+        .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 10px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #111827; color: var(--blue); position: sticky; top: 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><i class="fas fa-list-check"></i> Qualys KB Full Metrics</h1>
+    <div class="header">
+        <h1><i class="fas fa-list"></i> Qualys KB Search</h1>
+        <p id="status">Ready for documented API parameters...</p>
+    </div>
     
-    <div class="stats-card">
-        <span id="recent-count" class="number">0</span>
-        <div id="sub-text">Loading Extended KnowledgeBase...</div>
+    <div class="search-panel">
+        <div class="field">
+            <label>Specific QIDs (ids)</label>
+            <input type="text" id="ids" placeholder="e.g. 12345, 67890">
+        </div>
+        <div class="field">
+            <label>Published After</label>
+            <input type="date" id="pubAfter">
+        </div>
+        <div class="field">
+            <label>Discovery Method</label>
+            <select id="discMethod">
+                <option value="">Any</option>
+                <option value="Remote">Remote</option>
+                <option value="Authenticated">Authenticated</option>
+                <option value="RemoteOnly">RemoteOnly</option>
+                <option value="AuthenticatedOnly">AuthenticatedOnly</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Patchable Only</label>
+            <select id="isPatchable">
+                <option value="">Either</option>
+                <option value="1">Yes (is_patchable=1)</option>
+                <option value="0">No (is_patchable=0)</option>
+            </select>
+        </div>
+        
+        <button class="btn-search" onclick="triggerSearch()">
+            <i class="fas fa-play"></i> Run GitHub Action Search
+        </button>
     </div>
 
-    <input type="text" id="searchInput" placeholder="Search across all columns..." onkeyup="filterTable()">
-
-    <table id="kbTable">
-        <thead>
-            <tr>
-                <th>QID</th>
-                <th>Title</th>
-                <th>CVE ID</th>
-                <th>Category</th>
-                <th>Sub-Category</th>
-                <th>Vendor Ref</th>
-                <th>Bugtraq</th>
-                <th>Published</th>
-                <th>Modified</th>
-            </tr>
-        </thead>
-        <tbody id="vuln-table">
-            </tbody>
-    </table>
+    <div class="table-wrapper">
+        <table id="kbTable">
+            <thead id="tHead"></thead>
+            <tbody id="tBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    async function updateUI() {
+    function triggerSearch() {
+        const actionUrl = `https://github.com/${window.location.pathname.split('/')[1]}/${window.location.pathname.split('/')[2]}/actions/workflows/update_kb.yml`;
+        alert("Parameters set! Please confirm the 'Run Workflow' on GitHub.");
+        window.open(actionUrl, '_blank');
+    }
+
+    async function loadData() {
         try {
             const res = await fetch('data.json');
-            const kb = await res.json();
-
-            document.getElementById('recent-count').innerText = kb.count;
-            document.getElementById('sub-text').innerText = `Last Updated: ${kb.last_updated}`;
-
-            const table = document.getElementById('vuln-table');
-            table.innerHTML = kb.data.map(v => `
-                <tr>
-                    <td>${v.qid}</td>
-                    <td>${v.title}</td>
-                    <td>${v.cve_id}</td>
-                    <td>${v.category}</td>
-                    <td>${v.sub_category}</td>
-                    <td>${v.vendor_ref}</td>
-                    <td>${v.bugtraq}</td>
-                    <td>${v.published}</td>
-                    <td>${v.modified}</td>
-                </tr>
-            `).join('');
-        } catch (err) {
-            document.getElementById('sub-text').innerText = "Error: data.json not populated.";
-        }
+            const json = await res.json();
+            if (json.data && json.data.length > 0) {
+                const cols = Object.keys(json.data[0]);
+                document.getElementById('tHead').innerHTML = `<tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
+                document.getElementById('tBody').innerHTML = json.data.map(row => `
+                    <tr>${cols.map(c => `<td>${row[c] || ''}</td>`).join('')}</tr>
+                `).join('');
+                document.getElementById('status').innerText = `Results: ${json.data.length} (Synced: ${json.last_updated})`;
+            }
+        } catch (e) { document.getElementById('status').innerText = "Waiting for initial search results..."; }
     }
-
-    function filterTable() {
-        let input = document.getElementById("searchInput").value.toUpperCase();
-        let rows = document.getElementById("vuln-table").getElementsByTagName("tr");
-        for (let i = 0; i < rows.length; i++) {
-            let text = rows[i].innerText.toUpperCase();
-            rows[i].style.display = text.indexOf(input) > -1 ? "" : "none";
-        }
-    }
-
-    updateUI();
+    loadData();
 </script>
-
 </body>
 </html>
