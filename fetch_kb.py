@@ -5,47 +5,37 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 
 def fetch_data():
-    # Retrieve secrets from GitHub Actions Environment
     username = os.getenv("QUALYS_USERNAME")
     password = os.getenv("QUALYS_PASSWORD")
     base_url = os.getenv("QUALYS_URL") 
     
-    # Calculate date: 7 days ago in YYYY-MM-DDTHH:MM:SSZ format
-    # Using timezone-aware UTC for accuracy
     delta_date = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
     
-    # API Parameters
     api_endpoint = f"{base_url}/api/2.0/fo/knowledge_base/vuln/"
-    params = {
-        'action': 'list',
-        'details': 'Basic',
-        'published_after': delta_date
-    }
+    params = {'action': 'list', 'details': 'Basic', 'published_after': delta_date}
     
-    headers = {'X-Requested-With': 'Python Requests'}
-
     try:
-        response = requests.get(api_endpoint, auth=(username, password), params=params, headers=headers)
-        response.raise_for_status()
-        
-        # Parse XML
+        response = requests.get(api_endpoint, auth=(username, password), params=params)
         root = ET.fromstring(response.content)
         vuln_list = root.findall('.//VULN')
         
         parsed_results = []
-        for vuln in vuln_list:
+        for v in vuln_list:
+            # Capturing all common fields available in the 'Basic' details level
             parsed_results.append({
-                "qid": vuln.findtext('QID'),
-                "title": vuln.findtext('TITLE'),
-                "severity": vuln.findtext('SEVERITY'),
-                "category": vuln.findtext('CATEGORY'),
-                "published": vuln.findtext('PUBLISHED_DATETIME')
+                "qid": v.findtext('QID'),
+                "title": v.findtext('TITLE'),
+                "category": v.findtext('CATEGORY'),
+                "sub_category": v.findtext('SUB_CATEGORY'),
+                "cve_id": v.findtext('CVE_ID_LIST/CVE_ID/ID') or "N/A",
+                "vendor_ref": v.findtext('VENDOR_REFERENCE_LIST/VENDOR_REFERENCE/ID') or "N/A",
+                "bugtraq": v.findtext('BUGTRAQ_ID_LIST/BUGTRAQ_ID/ID') or "N/A",
+                "modified": v.findtext('LAST_CUSTOMIZATION_DATETIME'),
+                "published": v.findtext('PUBLISHED_DATETIME')
             })
             
-        # Final JSON structure
         output = {
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "time_window": f"Since {delta_date}",
             "count": len(parsed_results),
             "data": parsed_results
         }
@@ -53,8 +43,6 @@ def fetch_data():
         with open('data.json', 'w') as f:
             json.dump(output, f, indent=4)
             
-        print(f"Success: Found {len(parsed_results)} new QIDs since {delta_date}")
-
     except Exception as e:
         print(f"Error: {e}")
 
