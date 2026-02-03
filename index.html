@@ -4,20 +4,23 @@
             const response = await fetch('data.json');
             const data = await response.json();
             
-            // Update Metric Cards
-            document.getElementById('sev5-count').innerText = data.total_sev5.toLocaleString();
-            document.getElementById('update-time').innerText = "Last Sync: " + data.last_updated;
-
-            // Populate a small table or list of recent QIDs
-            const listContainer = document.getElementById('recent-list');
-            listContainer.innerHTML = data.recent_qids.map(v => `
-                <div style="padding: 10px; border-bottom: 1px solid #334155;">
-                    <strong>QID ${v.qid}:</strong> ${v.title}
-                </div>
+            // Update the Metric Card for recent findings
+            document.getElementById('recent-count').innerText = data.count;
+            document.getElementById('filter-label').innerText = "Vulnerabilities since " + data.filter_used;
+            
+            // Populate the table with the time-filtered results
+            const tableBody = document.getElementById('vuln-table-body');
+            tableBody.innerHTML = data.vulnerabilities.map(v => `
+                <tr>
+                    <td>${v.qid}</td>
+                    <td>${v.title}</td>
+                    <td><span class="sev-badge">${v.severity}</span></td>
+                    <td>${v.published}</td>
+                </tr>
             `).join('');
 
         } catch (error) {
-            console.error("Dashboard failed to load:", error);
+            console.error("Failed to load live data:", error);
         }
     }
     window.onload = loadDashboard;
