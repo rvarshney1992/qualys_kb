@@ -1,0 +1,11 @@
+<script>
+    async function loadDashboard() {
+        const response = await fetch('data.json');
+        const data = await response.json();
+        
+        // Update the count numbers on your page
+        document.getElementById('sev5-count').innerText = data.total_sev5;
+        document.getElementById('update-time').innerText = "Last Updated: " + data.last_updated;
+    }
+    loadDashboard();
+</script>
