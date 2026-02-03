@@ -1,27 +1,19 @@
-<script>
-    async function loadDashboard() {
-        try {
-            const response = await fetch('data.json');
-            const data = await response.json();
-            
-            // Update the Metric Card for recent findings
-            document.getElementById('recent-count').innerText = data.count;
-            document.getElementById('filter-label').innerText = "Vulnerabilities since " + data.filter_used;
-            
-            // Populate the table with the time-filtered results
-            const tableBody = document.getElementById('vuln-table-body');
-            tableBody.innerHTML = data.vulnerabilities.map(v => `
-                <tr>
-                    <td>${v.qid}</td>
-                    <td>${v.title}</td>
-                    <td><span class="sev-badge">${v.severity}</span></td>
-                    <td>${v.published}</td>
-                </tr>
-            `).join('');
+async function updateUI() {
+    const res = await fetch('data.json');
+    const kb = await res.json();
 
-        } catch (error) {
-            console.error("Failed to load live data:", error);
-        }
-    }
-    window.onload = loadDashboard;
-</script>
+    // Update the Metric Card
+    document.getElementById('recent-count').innerText = kb.count;
+    document.getElementById('sub-text').innerText = `New findings ${kb.time_window}`;
+
+    // Update the Table
+    const table = document.getElementById('vuln-table');
+    table.innerHTML = kb.data.map(item => `
+        <tr>
+            <td>${item.qid}</td>
+            <td>${item.title}</td>
+            <td class="sev-${item.severity}">${item.severity}</td>
+            <td>${item.published}</td>
+        </tr>
+    `).join('');
+}
