@@ -1,22 +1,38 @@
+name: Qualys KB Sync
 on:
   workflow_dispatch:
     inputs:
       ids:
-        description: 'Comma-separated QIDs (ids)'
+        description: 'Comma-separated QIDs'
+        required: false
       date:
         description: 'Published After (YYYY-MM-DD)'
+        required: false
       method:
-        description: 'Discovery Method (Remote, Authenticated, etc.)'
+        description: 'Discovery Method'
+        required: false
       patchable:
-        description: 'Patchable (1 for Yes, 0 for No)'
+        description: 'Is Patchable (1 or 0)'
+        required: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Explicitly grant write permission
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests
-      - env:
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install Dependencies
+        run: pip install requests
+        
+      - name: Run Fetch Script
+        env:
           QUALYS_USERNAME: ${{ secrets.QUALYS_USERNAME }}
           QUALYS_PASSWORD: ${{ secrets.QUALYS_PASSWORD }}
           QUALYS_URL: ${{ secrets.QUALYS_URL }}
@@ -25,6 +41,7 @@ jobs:
           INPUT_METHOD: ${{ github.event.inputs.method }}
           INPUT_PATCHABLE: ${{ github.event.inputs.patchable }}
         run: python fetch_kb.py
+        
       - name: Commit and Push Changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,6 +49,6 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git commit -m "Auto-update Qualys KB data [skip ci]" || exit 0
-          # Using the GITHUB_TOKEN directly in the push URL bypasses most 403 errors
+          git commit -m "Live API Refresh [skip ci]" || exit 0
+          # Bypasses 403 by embedding token in the push URL
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
